@@ -1,78 +1,54 @@
 CREATE TABLE movies (
-    tconst VARCHAR(20) PRIMARY KEY,
+    movie_id VARCHAR(50) PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    start_year INTEGER,
-    runtime_minutes INTEGER
+    release_date DATE,
+    rating DECIMAL(3,1),
+    popularity DECIMAL(12,3),
+    language VARCHAR(10),
+    overview TEXT,
+    rating_category VARCHAR(20),
+    popularity_category VARCHAR(20),
+    movie_age INT,
+    CONSTRAINT chk_movies_rating
+        CHECK (rating IS NULL OR (rating >= 0 AND rating <= 10)),
+
+    CONSTRAINT chk_movies_popularity
+        CHECK (popularity IS NULL OR popularity >= 0),
+
+    CONSTRAINT chk_movies_age
+        CHECK (movie_age IS NULL OR movie_age >= 0)
 );
 
-CREATE TABLE ratings (
-    tconst VARCHAR(20) PRIMARY KEY,
-    average_rating NUMERIC(3,1),
-    num_votes INTEGER DEFAULT 0,
-
-    CONSTRAINT fk_ratings_movies
-        FOREIGN KEY (tconst)
-        REFERENCES movies(tconst),
-
-    CONSTRAINT chk_average_rating
-        CHECK (average_rating BETWEEN 0 AND 10),
-
-    CONSTRAINT chk_num_votes
-        CHECK (num_votes >= 0)
-);
-
-CREATE TABLE movie_genres (
-    tconst VARCHAR(20) NOT NULL,
-    genre VARCHAR(50) NOT NULL,
-
-    PRIMARY KEY (tconst, genre),
-
-    CONSTRAINT fk_movie_genres_movies
-        FOREIGN KEY (tconst)
-        REFERENCES movies(tconst)
-);
-
-CREATE TABLE bookings (
-    booking_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    event_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    tconst VARCHAR(20) NOT NULL,
-    cinema_id VARCHAR(50) NOT NULL,
+CREATE TABLE booking_analytics (
+    booking_id VARCHAR(50) PRIMARY KEY,
+    movie_id VARCHAR(50) NOT NULL,
+    movie_name VARCHAR(255) NOT NULL,
     city VARCHAR(100) NOT NULL,
-    seats INTEGER NOT NULL,
-    ticket_price NUMERIC(10,2) NOT NULL,
-    payment_method VARCHAR(50),
+    theater VARCHAR(150) NOT NULL,
 
-    CONSTRAINT fk_bookings_movies
-        FOREIGN KEY (tconst)
-        REFERENCES movies(tconst),
+    tickets INT NOT NULL,
+    ticket_price BIGINT NOT NULL,
+    total_amount BIGINT NOT NULL,
 
-    CONSTRAINT chk_booking_seats
-        CHECK (seats > 0),
+    booking_status ENUM('CONFIRMED', 'CANCELLED') NOT NULL,
+    booking_time TIMESTAMP NOT NULL,
+    booking_date DATE NOT NULL,
+    booking_hour INT NOT NULL,
+    revenue_category ENUM('Low', 'Medium', 'High') NOT NULL,
 
-    CONSTRAINT chk_ticket_price
-        CHECK (ticket_price >= 0)
-);
+    CONSTRAINT chk_booking_movies
+        FOREIGN KEY (movie_id)
+        REFERENCES movies(movie_id),
 
-CREATE TABLE booking_stats_minute (
-    window_start TIMESTAMP NOT NULL,
-    tconst VARCHAR(20) NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    bookings BIGINT NOT NULL DEFAULT 0,
-    seats BIGINT NOT NULL DEFAULT 0,
-    revenue NUMERIC(14,2) NOT NULL DEFAULT 0,
+    CONSTRAINT chk_booking_tickets
+        CHECK (tickets > 0),
 
-    PRIMARY KEY (window_start, tconst, city),
+    CONSTRAINT chk_booking_ticket_price
+        CHECK (ticket_price >= 0),
 
-    CONSTRAINT fk_booking_stats_movies
-        FOREIGN KEY (tconst)
-        REFERENCES movies(tconst),
+    CONSTRAINT chk_booking_total_amount
+        CHECK (total_amount >= 0),
 
-    CONSTRAINT chk_stats_bookings
-        CHECK (bookings >= 0),
-
-    CONSTRAINT chk_stats_seats
-        CHECK (seats >= 0),
-
-    CONSTRAINT chk_stats_revenue
-        CHECK (revenue >= 0)
+    CONSTRAINT chk_booking_hour
+        CHECK (booking_hour BETWEEN 0 AND 23)
 );
